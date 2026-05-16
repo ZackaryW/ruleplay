@@ -158,7 +158,7 @@ class PlayerService : Service() {
     private fun advanceToNext() {
         val previousIndex = currentIndex
         currentIndex = (currentIndex + 1) % playlist.size
-        if (currentIndex <= previousIndex) {
+        if (currentIndex < previousIndex) {
             // Wrapped around – a full loop has completed.
             ruleEngine.onLoopCompleted()
         }

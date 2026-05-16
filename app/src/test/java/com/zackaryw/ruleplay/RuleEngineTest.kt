@@ -43,7 +43,7 @@ class RuleEngineTest {
 
     @Test
     fun `skip locked after consecutive skips reach threshold`() {
-        val threshold = engine.skipThreshold   // 5 with seed 42
+        val threshold = engine.skipThreshold   // 4 with seed 42
         repeat(threshold) { engine.onSkipAttempt("s$it") }
         assertTrue(engine.skipLocked)
     }
@@ -70,13 +70,12 @@ class RuleEngineTest {
 
     @Test
     fun `new threshold is drawn after song completes`() {
-        val firstThreshold = engine.skipThreshold
-        val threshold = engine.skipThreshold
+        val threshold = engine.skipThreshold  // 4 with seed 42
         repeat(threshold) { engine.onSkipAttempt("s$it") }
         engine.onSongCompleted("forced_song")
 
         val secondThreshold = engine.skipThreshold
-        // With seed 42 the second draw is 8, which differs from the first (5).
+        // With seed 42 the second draw is 6, which differs from the first (4).
         assertTrue(
             "Threshold should be in valid range",
             secondThreshold in RuleEngine.THRESHOLD_MIN..RuleEngine.THRESHOLD_MAX
