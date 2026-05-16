@@ -10,7 +10,12 @@ import android.media.MediaPlayer
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import androidx.core.app.NotificationCompat
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
+import androidx.media.session.MediaButtonReceiver
 import com.zackaryw.ruleplay.model.Song
 
 /**
@@ -33,6 +38,7 @@ class PlayerService : Service() {
     // ── Playback state ────────────────────────────────────────────────────────
 
     private var mediaPlayer: MediaPlayer? = null
+    private lateinit var mediaSession: MediaSessionCompat
 
     /** The current shuffled playlist. */
     var playlist: List<Song> = emptyList()
@@ -70,10 +76,16 @@ class PlayerService : Service() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        createMediaSession()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        when (intent?.action) {
+        if (intent == null || !::mediaSession.isInitialized) {
+            return START_NOT_STICKY
+        }
+
+        when (intent.action) {
+            Intent.ACTION_MEDIA_BUTTON -> MediaButtonReceiver.handleIntent(mediaSession, intent)
             ACTION_TOGGLE_PLAYBACK -> togglePlayPause()
             ACTION_SKIP -> skipCurrent()
             ACTION_STOP -> stopPlaybackAndService()
@@ -89,6 +101,10 @@ class PlayerService : Service() {
     override fun onDestroy() {
         mediaPlayer?.release()
         mediaPlayer = null
+        if (::mediaSession.isInitialized) {
+            mediaSession.isActive = false
+            mediaSession.release()
+        }
         super.onDestroy()
     }
 
@@ -122,13 +138,10 @@ class PlayerService : Service() {
     fun togglePlayPause() {
         val mp = mediaPlayer ?: return
         if (mp.isPlaying) {
-            mp.pause()
-            onPlayStateChanged?.invoke(false)
+            pausePlayback()
         } else {
-            mp.start()
-            onPlayStateChanged?.invoke(true)
+            resumePlayback()
         }
-        currentSong?.let { updateNotification(it) }
     }
 
     // ── Internal helpers ─────────────────────────────────────────────────────
@@ -156,6 +169,7 @@ class PlayerService : Service() {
             setOnCompletionListener { onCurrentSongCompleted() }
         }
 
+        updateMediaSession(song, PlaybackStateCompat.STATE_PLAYING)
         onSongChanged?.invoke(song)
         onPlayStateChanged?.invoke(true)
         updateNotification(song)
@@ -193,6 +207,36 @@ class PlayerService : Service() {
         }
     }
 
+    private fun createMediaSession() {
+        mediaSession = MediaSessionCompat(this, MEDIA_SESSION_TAG).apply {
+            setFlags(
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS or
+                    MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+            )
+            setCallback(
+                object : MediaSessionCompat.Callback() {
+                    override fun onPlay() {
+                        resumePlayback()
+                    }
+
+                    override fun onPause() {
+                        pausePlayback()
+                    }
+
+                    override fun onSkipToNext() {
+                        skipCurrent()
+                    }
+
+                    override fun onStop() {
+                        stopPlaybackAndService()
+                    }
+                }
+            )
+            isActive = true
+        }
+        updatePlaybackState(PlaybackStateCompat.STATE_STOPPED)
+    }
+
     private fun updateNotification(song: Song) {
         val contentIntent = PendingIntent.getActivity(
             this, 0,
@@ -219,6 +263,7 @@ class PlayerService : Service() {
         )
 
         val playing = isPlaying
+        mediaSession.setSessionActivity(contentIntent)
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_music_note)
             .setContentTitle(song.title)
@@ -230,6 +275,11 @@ class PlayerService : Service() {
             )
             .setOnlyAlertOnce(true)
             .setOngoing(playing)
+            .setStyle(
+                androidx.media.app.NotificationCompat.MediaStyle()
+                    .setMediaSession(mediaSession.sessionToken)
+                    .setShowActionsInCompactView(0, 1, 2)
+            )
             .addAction(
                 if (playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
                 if (playing) getString(R.string.pause) else getString(R.string.play),
@@ -239,6 +289,56 @@ class PlayerService : Service() {
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.stop), stopIntent)
             .build()
         startForeground(NOTIFICATION_ID, notification)
+    }
+
+    private fun pausePlayback() {
+        val player = mediaPlayer ?: return
+        if (!player.isPlaying) return
+        player.pause()
+        updatePlaybackState(PlaybackStateCompat.STATE_PAUSED)
+        onPlayStateChanged?.invoke(false)
+        currentSong?.let { updateNotification(it) }
+    }
+
+    private fun resumePlayback() {
+        val player = mediaPlayer ?: return
+        if (player.isPlaying) return
+        player.start()
+        updatePlaybackState(PlaybackStateCompat.STATE_PLAYING)
+        onPlayStateChanged?.invoke(true)
+        currentSong?.let { updateNotification(it) }
+    }
+
+    private fun updateMediaSession(song: Song, state: Int) {
+        val duration = if (song.duration > 0L) song.duration else mediaPlayer?.duration?.toLong() ?: 0L
+        mediaSession.setMetadata(
+            MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.title)
+                .putString(
+                    MediaMetadataCompat.METADATA_KEY_ARTIST,
+                    song.artist ?: getString(R.string.unknown_artist)
+                )
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration)
+                .build()
+        )
+        updatePlaybackState(state)
+    }
+
+    private fun updatePlaybackState(state: Int) {
+        val position = mediaPlayer?.currentPosition?.toLong() ?: 0L
+        val speed = if (state == PlaybackStateCompat.STATE_PLAYING) 1f else 0f
+        mediaSession.setPlaybackState(
+            PlaybackStateCompat.Builder()
+                .setActions(
+                    PlaybackStateCompat.ACTION_PLAY or
+                        PlaybackStateCompat.ACTION_PAUSE or
+                        PlaybackStateCompat.ACTION_PLAY_PAUSE or
+                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                        PlaybackStateCompat.ACTION_STOP
+                )
+                .setState(state, position, speed, SystemClock.elapsedRealtime())
+                .build()
+        )
     }
 
     private fun stopPlaybackAndService() {
@@ -253,12 +353,15 @@ class PlayerService : Service() {
             player.release()
         }
         mediaPlayer = null
+        mediaSession.setMetadata(null)
+        updatePlaybackState(PlaybackStateCompat.STATE_STOPPED)
         onPlayStateChanged?.invoke(false)
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
     companion object {
+        private const val MEDIA_SESSION_TAG = "RulePlaySession"
         private const val CHANNEL_ID = "ruleplay_playback"
         private const val NOTIFICATION_ID = 1
         private const val REQUEST_TOGGLE = 1
