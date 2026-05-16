@@ -19,4 +19,10 @@
     <!-- Toast messages -->
     <string name="skip_locked_message">Skip locked – finish this song first!</string>
     <string name="force_play_message">"%1$s" must play (skipped too often)</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="skip">Skip</string>
+    <string name="stop">Stop</string>
+    <string name="playback_state_playing">Playing</string>
+    <string name="playback_state_paused">Paused</string>
 </resources>

@@ -72,6 +72,20 @@ class PlayerService : Service() {
         createNotificationChannel()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_TOGGLE_PLAYBACK -> togglePlayPause()
+            ACTION_SKIP -> skipCurrent()
+            ACTION_STOP -> stopPlaybackAndService()
+        }
+        return START_NOT_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        stopPlaybackAndService()
+        super.onTaskRemoved(rootIntent)
+    }
+
     override fun onDestroy() {
         mediaPlayer?.release()
         mediaPlayer = null
@@ -185,18 +199,73 @@ class PlayerService : Service() {
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE
         )
+        val toggleIntent = PendingIntent.getService(
+            this,
+            REQUEST_TOGGLE,
+            Intent(this, PlayerService::class.java).setAction(ACTION_TOGGLE_PLAYBACK),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val skipIntent = PendingIntent.getService(
+            this,
+            REQUEST_SKIP,
+            Intent(this, PlayerService::class.java).setAction(ACTION_SKIP),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val stopIntent = PendingIntent.getService(
+            this,
+            REQUEST_STOP,
+            Intent(this, PlayerService::class.java).setAction(ACTION_STOP),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val playing = isPlaying
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_music_note)
             .setContentTitle(song.title)
             .setContentText(song.artist ?: getString(R.string.unknown_artist))
             .setContentIntent(contentIntent)
-            .setOngoing(true)
+            .setSubText(
+                if (playing) getString(R.string.playback_state_playing)
+                else getString(R.string.playback_state_paused)
+            )
+            .setOnlyAlertOnce(true)
+            .setOngoing(playing)
+            .addAction(
+                if (playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+                if (playing) getString(R.string.pause) else getString(R.string.play),
+                toggleIntent
+            )
+            .addAction(android.R.drawable.ic_media_next, getString(R.string.skip), skipIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.stop), stopIntent)
             .build()
         startForeground(NOTIFICATION_ID, notification)
+    }
+
+    private fun stopPlaybackAndService() {
+        mediaPlayer?.let { player ->
+            try {
+                if (player.isPlaying) {
+                    player.stop()
+                }
+            } catch (_: IllegalStateException) {
+                // Ignore and continue shutdown.
+            }
+            player.release()
+        }
+        mediaPlayer = null
+        onPlayStateChanged?.invoke(false)
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 
     companion object {
         private const val CHANNEL_ID = "ruleplay_playback"
         private const val NOTIFICATION_ID = 1
+        private const val REQUEST_TOGGLE = 1
+        private const val REQUEST_SKIP = 2
+        private const val REQUEST_STOP = 3
+        private const val ACTION_TOGGLE_PLAYBACK = "com.zackaryw.ruleplay.action.TOGGLE_PLAYBACK"
+        private const val ACTION_SKIP = "com.zackaryw.ruleplay.action.SKIP"
+        private const val ACTION_STOP = "com.zackaryw.ruleplay.action.STOP"
     }
 }

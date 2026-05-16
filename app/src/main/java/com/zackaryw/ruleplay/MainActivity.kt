@@ -76,6 +76,9 @@ class MainActivity : AppCompatActivity() {
             unbindService(serviceConnection)
             serviceBound = false
         }
+        if (isFinishing) {
+            stopService(Intent(this, PlayerService::class.java))
+        }
         super.onDestroy()
     }
 
