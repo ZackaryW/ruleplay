@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RulePlay</string>
+    <string name="app_subtitle">Rule-based audio player</string>
+    <string name="select_folder">Select Music Folder</string>
+    <string name="change_folder">Change Folder</string>
+    <string name="no_song">No song playing</string>
+    <string name="unknown_artist">Unknown Artist</string>
+    <string name="no_audio_files">No audio files found in the selected folder.</string>
+    <string name="songs_loaded">Loaded %1$d songs</string>
+
+    <!-- Rule status -->
+    <string name="rule_status_label">Playback Rules</string>
+    <string name="rule1_status">Skips: %1$d / %2$d</string>
+    <string name="rule2_status">Force-plays this loop: %1$d / 3</string>
+    <string name="locked">LOCKED</string>
+    <string name="suspended">suspended</string>
+
+    <!-- Toast messages -->
+    <string name="skip_locked_message">Skip locked – finish this song first!</string>
+    <string name="force_play_message">"%1$s" must play (skipped too often)</string>
+</resources>
