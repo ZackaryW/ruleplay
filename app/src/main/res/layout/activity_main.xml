@@ -1,111 +1,217 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp"
     android:background="@color/background">
 
-    <!-- App title -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:textColor="@color/on_background"
-        android:layout_marginBottom="8dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/app_subtitle"
-        android:textSize="13sp"
-        android:textColor="@color/on_background_secondary"
-        android:layout_marginBottom="32dp" />
-
-    <!-- Folder selection -->
-    <Button
-        android:id="@+id/btnSelectFolder"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/select_folder"
-        android:layout_marginBottom="40dp" />
-
-    <!-- Now Playing -->
-    <TextView
-        android:id="@+id/tvSongTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/no_song"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/on_background"
-        android:textAlignment="center"
-        android:maxLines="2"
-        android:ellipsize="end"
-        android:layout_marginBottom="6dp" />
-
-    <TextView
-        android:id="@+id/tvArtist"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="15sp"
-        android:textColor="@color/on_background_secondary"
-        android:textAlignment="center"
-        android:layout_marginBottom="32dp" />
-
-    <!-- Playback controls -->
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="32dp">
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="24dp">
 
-        <Button
-            android:id="@+id/btnPlayPause"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:text="▶"
-            android:textSize="26sp"
-            android:layout_marginEnd="20dp" />
+        <!-- App title -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_name"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_background"
+            android:layout_marginBottom="8dp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/app_subtitle"
+            android:textSize="13sp"
+            android:textColor="@color/on_background_secondary"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Folder selection -->
         <Button
-            android:id="@+id/btnSkip"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:text="⏭"
-            android:textSize="26sp" />
+            android:id="@+id/btnSelectFolder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_folder"
+            android:layout_marginBottom="40dp" />
+
+        <!-- Now Playing -->
+        <TextView
+            android:id="@+id/tvSongTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/no_song"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/on_background"
+            android:textAlignment="center"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:id="@+id/tvArtist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="15sp"
+            android:textColor="@color/on_background_secondary"
+            android:textAlignment="center"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Playback controls -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="32dp">
+
+            <Button
+                android:id="@+id/btnPlayPause"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:text="▶"
+                android:textSize="26sp"
+                android:layout_marginEnd="20dp" />
+
+            <Button
+                android:id="@+id/btnSkip"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:text="⏭"
+                android:textSize="26sp" />
+
+        </LinearLayout>
+
+        <!-- Rule status -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/rule_status_label"
+            android:textSize="11sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.08"
+            android:textColor="@color/on_background_secondary"
+            android:textAlignment="center"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tvRuleStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="13sp"
+            android:fontFamily="monospace"
+            android:textColor="@color/on_background"
+            android:textAlignment="center"
+            android:lineSpacingMultiplier="1.4"
+            android:padding="12dp"
+            android:background="@color/surface"
+            android:minLines="2" />
+
+        <!-- Settings section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_label"
+            android:textSize="11sp"
+            android:textAllCaps="true"
+            android:letterSpacing="0.08"
+            android:textColor="@color/on_background_secondary"
+            android:textAlignment="center"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:background="@color/surface">
+
+            <!-- Rule 1: Skip threshold range -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/setting_skip_threshold_range"
+                android:textSize="13sp"
+                android:textColor="@color/on_background"
+                android:layout_marginBottom="4dp" />
+
+            <com.google.android.material.slider.RangeSlider
+                android:id="@+id/sliderThresholdRange"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:valueFrom="1"
+                android:valueTo="20"
+                app:stepSize="1" />
+
+            <TextView
+                android:id="@+id/tvThresholdRangeValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/on_background_secondary"
+                android:textAlignment="center"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Rule 2: Skip frequency threshold -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/setting_skip_frequency_threshold"
+                android:textSize="13sp"
+                android:textColor="@color/on_background"
+                android:layout_marginBottom="4dp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderSkipFrequency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:valueFrom="1"
+                android:valueTo="20"
+                app:stepSize="1" />
+
+            <TextView
+                android:id="@+id/tvSkipFrequencyValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/on_background_secondary"
+                android:textAlignment="center"
+                android:layout_marginBottom="20dp" />
+
+            <!-- Rule 2: Force-play suspension limit -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/setting_force_play_suspension_limit"
+                android:textSize="13sp"
+                android:textColor="@color/on_background"
+                android:layout_marginBottom="4dp" />
+
+            <com.google.android.material.slider.Slider
+                android:id="@+id/sliderSuspensionLimit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:valueFrom="1"
+                android:valueTo="10"
+                app:stepSize="1" />
+
+            <TextView
+                android:id="@+id/tvSuspensionLimitValue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/on_background_secondary"
+                android:textAlignment="center" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Rule status -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/rule_status_label"
-        android:textSize="11sp"
-        android:textAllCaps="true"
-        android:letterSpacing="0.08"
-        android:textColor="@color/on_background_secondary"
-        android:textAlignment="center"
-        android:layout_marginBottom="4dp" />
-
-    <TextView
-        android:id="@+id/tvRuleStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="13sp"
-        android:fontFamily="monospace"
-        android:textColor="@color/on_background"
-        android:textAlignment="center"
-        android:lineSpacingMultiplier="1.4"
-        android:padding="12dp"
-        android:background="@color/surface"
-        android:minLines="2" />
-
-</LinearLayout>
+</ScrollView>

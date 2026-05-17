@@ -12,6 +12,8 @@ import android.provider.DocumentsContract
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.slider.RangeSlider
+import com.google.android.material.slider.Slider
 import com.zackaryw.ruleplay.databinding.ActivityMainBinding
 import com.zackaryw.ruleplay.model.Song
 
@@ -36,6 +38,8 @@ class MainActivity : AppCompatActivity() {
             val localBinder = service as PlayerService.LocalBinder
             playerService = localBinder.getService().also { attachCallbacks(it) }
             serviceBound = true
+            // Apply current slider values to the freshly connected engine.
+            applySliderValuesToEngine()
             // Refresh UI in case playback was already running.
             playerService?.currentSong?.let { refreshNowPlaying(it) }
             updateRuleStatus()
@@ -69,6 +73,8 @@ class MainActivity : AppCompatActivity() {
         binding.btnSelectFolder.setOnClickListener { folderPickerLauncher.launch(null) }
         binding.btnPlayPause.setOnClickListener { playerService?.togglePlayPause() }
         binding.btnSkip.setOnClickListener { playerService?.skipCurrent() }
+
+        initSettingsSliders()
     }
 
     override fun onDestroy() {
@@ -133,9 +139,73 @@ class MainActivity : AppCompatActivity() {
             append(getString(R.string.rule1_status, state.consecutiveSkips, state.skipThreshold))
             if (state.skipLocked) append(" \uD83D\uDD12 ${getString(R.string.locked)}")
             append("\n")
-            append(getString(R.string.rule2_status, state.forcePlayActivationsThisLoop))
+            append(getString(R.string.rule2_status, state.forcePlayActivationsThisLoop, state.forcePlaySuspensionLimit))
             if (state.isRule2Suspended) append(" (${getString(R.string.suspended)})")
         }
+    }
+
+    // ── Settings sliders ──────────────────────────────────────────────────────
+
+    private fun initSettingsSliders() {
+        // Initialise slider positions from the engine's default constants.
+        binding.sliderThresholdRange.values = listOf(
+            RuleEngine.THRESHOLD_MIN.toFloat(),
+            RuleEngine.THRESHOLD_MAX.toFloat()
+        )
+        binding.sliderSkipFrequency.value = RuleEngine.SKIP_FREQUENCY_THRESHOLD.toFloat()
+        binding.sliderSuspensionLimit.value = RuleEngine.FORCE_PLAY_SUSPENSION_LIMIT.toFloat()
+
+        // Refresh the value labels to match the initial positions.
+        updateThresholdRangeLabel(RuleEngine.THRESHOLD_MIN, RuleEngine.THRESHOLD_MAX)
+        updateSkipFrequencyLabel(RuleEngine.SKIP_FREQUENCY_THRESHOLD)
+        updateSuspensionLimitLabel(RuleEngine.FORCE_PLAY_SUSPENSION_LIMIT)
+
+        binding.sliderThresholdRange.addOnChangeListener(RangeSlider.OnChangeListener { slider, _, _ ->
+            val min = slider.values[0].toInt()
+            val max = slider.values[1].toInt()
+            playerService?.ruleEngine?.let { engine ->
+                engine.thresholdMin = min
+                engine.thresholdMax = max
+            }
+            updateThresholdRangeLabel(min, max)
+        })
+
+        binding.sliderSkipFrequency.addOnChangeListener(Slider.OnChangeListener { _, value, _ ->
+            val threshold = value.toInt()
+            playerService?.ruleEngine?.skipFrequencyThreshold = threshold
+            updateSkipFrequencyLabel(threshold)
+        })
+
+        binding.sliderSuspensionLimit.addOnChangeListener(Slider.OnChangeListener { _, value, _ ->
+            val limit = value.toInt()
+            playerService?.ruleEngine?.forcePlaySuspensionLimit = limit
+            updateSuspensionLimitLabel(limit)
+            updateRuleStatus()
+        })
+    }
+
+    /** Pushes the current slider values to the engine (called when service first connects). */
+    private fun applySliderValuesToEngine() {
+        val engine = playerService?.ruleEngine ?: return
+        engine.thresholdMin = binding.sliderThresholdRange.values[0].toInt()
+        engine.thresholdMax = binding.sliderThresholdRange.values[1].toInt()
+        engine.skipFrequencyThreshold = binding.sliderSkipFrequency.value.toInt()
+        engine.forcePlaySuspensionLimit = binding.sliderSuspensionLimit.value.toInt()
+    }
+
+    private fun updateThresholdRangeLabel(min: Int, max: Int) {
+        binding.tvThresholdRangeValue.text =
+            getString(R.string.setting_skip_threshold_range_value, min, max)
+    }
+
+    private fun updateSkipFrequencyLabel(threshold: Int) {
+        binding.tvSkipFrequencyValue.text =
+            getString(R.string.setting_skip_frequency_value, threshold)
+    }
+
+    private fun updateSuspensionLimitLabel(limit: Int) {
+        binding.tvSuspensionLimitValue.text =
+            getString(R.string.setting_force_play_suspension_value, limit)
     }
 
     // ── Folder loading ────────────────────────────────────────────────────────

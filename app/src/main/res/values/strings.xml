@@ -12,9 +12,18 @@
     <!-- Rule status -->
     <string name="rule_status_label">Playback Rules</string>
     <string name="rule1_status">Skips: %1$d / %2$d</string>
-    <string name="rule2_status">Force-plays this loop: %1$d / 3</string>
+    <string name="rule2_status">Force-plays this loop: %1$d / %2$d</string>
     <string name="locked">LOCKED</string>
     <string name="suspended">suspended</string>
+
+    <!-- Settings -->
+    <string name="settings_label">Rule Settings</string>
+    <string name="setting_skip_threshold_range">Rule 1 – consecutive skip limit range</string>
+    <string name="setting_skip_threshold_range_value">%1$d – %2$d skips</string>
+    <string name="setting_skip_frequency_threshold">Rule 2 – force-play after this many skips</string>
+    <string name="setting_skip_frequency_value">%1$d skips</string>
+    <string name="setting_force_play_suspension_limit">Rule 2 – suspend force-play after this many activations</string>
+    <string name="setting_force_play_suspension_value">%1$d activations</string>
 
     <!-- Toast messages -->
     <string name="skip_locked_message">Skip locked – finish this song first!</string>
